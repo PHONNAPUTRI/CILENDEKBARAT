@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="stylesheet" href="css/leaflet.css">
+        <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
+        <link rel="stylesheet" href="css/qgis2web.css">
+        <link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <style>
+        html, body, #map {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+        </style>
+        <title></title>
+    </head>
+    <body>
+        <div id="map">
+        </div>
+        <script src="js/qgis2web_expressions.js"></script>
+        <script src="js/leaflet.js"></script>
+        <script src="js/L.Control.Layers.Tree.min.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/leaflet.pattern.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/rbush.min.js"></script>
+        <script src="js/labelgun.min.js"></script>
+        <script src="js/labels.js"></script>
+        <script src="data/CILENDEKBARAT_1.js"></script>
+        <script src="data/CILENDEKBARAT_2.js"></script>
+        <script>
+        var highlightLayer;
+        function highlightFeature(e) {
+            highlightLayer = e.target;
+
+            if (e.target.feature.geometry.type === 'LineString' || e.target.feature.geometry.type === 'MultiLineString') {
+              highlightLayer.setStyle({
+                color: '#ffff00',
+              });
+            } else {
+              highlightLayer.setStyle({
+                fillColor: '#ffff00',
+                fillOpacity: 1
+              });
+            }
+            highlightLayer.openPopup();
+        }
+        var map = L.map('map', {
+            zoomControl:false, maxZoom:28, minZoom:1
+        })
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        // remove popup's row if "visible-with-data"
+        function removeEmptyRowsFromPopupContent(content, feature) {
+         var tempDiv = document.createElement('div');
+         tempDiv.innerHTML = content;
+         var rows = tempDiv.querySelectorAll('tr');
+         for (var i = 0; i < rows.length; i++) {
+             var td = rows[i].querySelector('td.visible-with-data');
+             var key = td ? td.id : '';
+             if (td && td.classList.contains('visible-with-data') && feature.properties[key] == null) {
+                 rows[i].parentNode.removeChild(rows[i]);
+             }
+         }
+         return tempDiv.innerHTML;
+        }
+        // add class to format popup if it contains media
+		function addClassToPopupIfMedia(content, popup) {
+			var tempDiv = document.createElement('div');
+			tempDiv.innerHTML = content;
+			if (tempDiv.querySelector('td img')) {
+				popup._contentNode.classList.add('media');
+					// Delay to force the redraw
+					setTimeout(function() {
+						popup.update();
+					}, 10);
+			} else {
+				popup._contentNode.classList.remove('media');
+			}
+		}
+        var zoomControl = L.control.zoom({
+            position: 'topleft'
+        }).addTo(map);
+        var bounds_group = new L.featureGroup([]);
+        function setBounds() {
+            if (bounds_group.getLayers().length) {
+                map.fitBounds(bounds_group.getBounds());
+            }
+        }
+        map.createPane('pane_GMPAS_0');
+        map.getPane('pane_GMPAS_0').style.zIndex = 400;
+        var layer_GMPAS_0 = L.tileLayer('http://mt0.google.com/vt/lyrs=s&hl=en&x={x}&y={y}&z={z}', {
+            pane: 'pane_GMPAS_0',
+            opacity: 1.0,
+            attribution: '',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 18
+        });
+        layer_GMPAS_0;
+        map.addLayer(layer_GMPAS_0);
+        function pop_CILENDEKBARAT_1(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['TIPEHAK'] !== null ? autolinker.link(feature.properties['TIPEHAK'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['NIB'] !== null ? autolinker.link(feature.properties['NIB'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['LUASTERTUL'] !== null ? autolinker.link(feature.properties['LUASTERTUL'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['LUASPETA'] !== null ? autolinker.link(feature.properties['LUASPETA'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Nik'] !== null ? autolinker.link(feature.properties['Nik'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Ns'] !== null ? autolinker.link(feature.properties['Ns'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Nop'] !== null ? autolinker.link(feature.properties['Nop'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Nwp'] !== null ? autolinker.link(feature.properties['Nwp'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Predicted'] !== null ? autolinker.link(feature.properties['Predicted'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_CILENDEKBARAT_1_0(feature) {
+            switch(String(feature.properties['Nop'])) {
+                case '[\'327104000800300040\', \'327104000800300130\', \'327104000800300600\', \'327104000800300610\', \'327104000800300630\', \'327104000800300650\', \'327104000800300660\', \'327104000800300770\', \'327104000800300790\', \'327104000800300880\', \'327104000800300940\', \'327104000800300020\', \'327104000800300980\', \'327104000800301010\', \'327104000800301040\', \'327104000800301050\', \'327104000800301070\', \'327104000800301130\', \'327104000800301270\', \'327104000800301300\', \'327104000800301310\', \'327104000800301410\', \'327104000800301430\', \'327104000800301480\', \'327104000800301500\', \'327104000800301540\', \'327104000800304210\', \'327104000800400020\', \'327104000800400100\', \'327104000800400170\', \'327104000800400280\', \'327104000800400330\', \'327104000800400380\', \'327104000800400410\', \'327104000800400420\', \'327104000800400430\', \'327104000800400450\', \'327104000800400510\', \'327104000800400620\', \'327104000800500060\', \'327104000800500190\', \'327104000800500330\', \'327104000800500470\', \'327104000800500510\', \'327104000800500620\', \'327104000800500680\', \'327104000800500730\', \'327104000800500850\', \'327104000800500880\', \'327104000800500950\', \'327104000800500970\', \'327104000800501020\', \'327104000800501330\', \'327104000800502240\', \'327104000800600090\', \'327104000800600820\', \'327104000800601100\', \'327104000800601440\', \'327104000800601450\', \'327104000800601520\', \'327104000800601890\', \'327104000800602320\', \'327104000800602500\', \'327104000800602510\', \'327104000800602520\', \'327104000800602530\', \'327104000800602550\', \'327104000800603130\', \'327104000800603400\', \'327104000800603860\', \'327104000800603870\', \'327104000800603920\', \'327104000800604150\', \'327104000800604370\', \'327104000800604420\', \'327104000800604430\', \'327104000800604980\', \'327104000800605110\', \'327104000800605140\', \'327104000800605160\', \'327104000800900020\', \'327104000800900030\', \'327104000800900060\', \'327104000800900070\', \'327104000800900090\', \'327104000800900130\', \'327104000800900150\', \'327104000800900170\', \'327104000800900290\', \'327104000800900590\', \'327104000800900630\', \'327104000800900660\', \'327104000800900670\', \'327104000800900710\', \'327104000800900770\', \'327104000800900870\', \'327104000800900880\', \'327104000800900960\', \'327104000800901080\', \'327104000800901130\', \'327104000800901180\', \'327104000800901200\', \'327104000800901240\', \'327104000800901280\', \'327104000800901300\', \'327104000800901310\', \'327104000800901340\', \'327104000800901390\', \'327104000800901440\', \'327104000800901450\', \'327104000800901490\', \'327104000800901500\', \'327104000800901520\', \'327104000800901550\', \'327104000800901600\', \'327104000800901650\', \'327104000800901690\', \'327104000800901700\', \'327104000800901710\', \'327104000800901720\', \'327104000800901730\', \'327104000800901750\', \'327104000800901760\', \'327104000800901810\', \'327104000800901850\', \'327104000800901920\', \'327104000800901950\', \'327104000800902030\', \'327104000800902040\', \'327104000800902170\', \'327104000800902180\', \'327104000800902300\', \'327104000800902340\', \'327104000800902370\', \'327104000800902470\', \'327104000800902500\', \'327104000800902560\', \'327104000800902600\', \'327104000800902650\', \'327104000800902700\', \'327104000800902810\', \'327104000801300050\', \'327104000801300110\', \'327104000801300210\', \'327104000801300240\', \'327104000801300280\', \'327104000801300370\', \'327104000801300440\', \'327104000801300460\', \'327104000801300500\', \'327104000801300510\', \'327104000801300550\', \'327104000801300600\', \'327104000801303210\', \'327104000801303230\', \'327104000801400100\', \'327104000801400160\', \'327104000801400180\', \'327104000801400220\', \'327104000801400230\', \'327104000801400240\', \'327104000801400250\', \'327104000801400290\', \'327104000801400300\', \'327104000801400340\', \'327104000801400360\', \'327104000801400430\', \'327104000801400560\', \'327104000801400570\', \'327104000801400580\', \'327104000801400650\', \'327104000801400710\', \'327104000801400760\', \'327104000801400830\', \'327104000801400840\', \'327104000801400890\', \'327104000801400910\', \'327104000801400990\', \'327104000801600010\', \'327104000801600020\', \'327104000801600070\', \'327104000801600080\', \'327104000801600100\', \'327104000801600120\', \'327104000801600140\', \'327104000801600160\', \'327104000801600170\', \'327104000801600180\', \'327104000801600210\', \'327104000801600490\', \'327104000801600530\', \'327104000801600620\', \'327104000801600830\', \'327104000801600840\', \'327104000801601000\', \'327104000801601030\', \'327104000801601110\', \'327104000801601190\', \'327104000801601350\', \'327104000801601380\', \'327104000801601410\', \'327104000801601490\', \'327104000801700030\', \'327104000801700090\', \'327104000801700120\', \'327104000801700130\', \'327104000801700140\', \'327104000801700150\', \'327104000801700160\', \'327104000801700170\', \'327104000801700180\', \'327104000801700210\', \'327104000801700220\', \'327104000801700240\', \'327104000801700270\', \'327104000801700280\', \'327104000801700290\', \'327104000801700320\', \'327104000801700360\', \'327104000801700370\', \'327104000801700410\', \'327104000801700440\', \'327104000801700450\', \'327104000801700470\', \'327104000801700710\', \'327104000801700820\', \'327104000801700870\', \'327104000801701100\', \'327104000801701140\', \'327104000801701230\', \'327104000801701410\', \'327104000801701420\', \'327104000801701510\', \'327104000801701600\', \'327104000801701890\', \'327104000801702140\', \'327104000801702160\', \'327104000801702170\', \'327104000801702190\', \'327104000801702200\', \'327104000801702500\', \'327104000801702530\', \'327104000801800110\', \'327104000801800290\', \'327104000801800390\', \'327104000801800440\', \'327104000801800460\', \'327104000801800500\', \'327104000801800520\', \'327104000801800560\', \'327104000801800790\', \'327104000801800910\', \'327104000801800940\', \'327104000801801010\', \'327104000801801050\', \'327104000801801150\', \'327104000801801170\', \'327104000801801220\', \'327104000801801260\', \'327104000801801270\', \'327104000801801370\', \'327104000801801410\', \'327104000801801420\', \'327104000801801430\', \'327104000801801550\', \'327104000801801620\', \'327104000801901230\', \'327104000802000210\', \'327104000802000240\', \'327104000802000310\', \'327104000802000330\', \'327104000802000390\', \'327104000802000410\', \'327104000802000430\', \'327104000802000520\', \'327104000802000550\', \'327104000802000580\', \'327104000802000590\', \'327104000802000640\', \'327104000802000660\', \'327104000802000670\', \'327104000802000720\', \'327104000802000790\', \'327104000802000840\', \'327104000802000900\', \'327104000802000920\', \'327104000802000950\', \'327104000802000990\', \'327104000802001030\', \'327104000802001040\', \'327104000802001080\', \'327104000802001160\', \'327104000802001360\', \'327104000802001390\', \'327104000802001410\', \'327104000802001420\', \'327104000802001460\', \'327104000802001540\', \'327104000802001740\', \'327104000802001760\', \'327104000802001770\', \'327104000802001780\', \'327104000802001810\', \'327104000802001840\', \'327104000802001880\', \'327104000802001910\', \'327104000802001950\', \'327104000802002000\', \'327104000802002010\', \'327104000802002020\', \'327104000802002070\', \'327104000802002090\', \'327104000802002100\', \'327104000802002190\', \'327104000802002210\', \'327104000802002300\', \'327104000802002670\', \'327104000802100030\', \'327104000802100160\', \'327104000802100230\', \'327104000802100280\', \'327104000802100320\', \'327104000802100400\', \'327104000802100460\', \'327104000802100480\', \'327104000802100570\', \'327104000802100610\', \'327104000802100630\', \'327104000802100700\', \'327104000802100820\', \'327104000802100970\', \'327104000802101020\', \'327104000802101050\', \'327104000802101210\', \'327104000802101230\', \'327104000802101240\', \'327104000802200040\', \'327104000802200060\', \'327104000802200070\', \'327104000802200120\', \'327104000802200150\', \'327104000802200160\', \'327104000802200170\', \'327104000802200180\', \'327104000802200230\', \'327104000802200240\', \'327104000802200260\', \'327104000802200330\', \'327104000802200340\', \'327104000802200400\', \'327104000802200450\', \'327104000802200480\', \'327104000802200560\', \'327104000802200570\', \'327104000802200580\', \'327104000802200600\', \'327104000802200640\', \'327104000802200670\', \'327104000802200680\', \'327104000802200690\', \'327104000802200760\', \'327104000802200820\', \'327104000802200860\', \'327104000802200880\', \'327104000802200890\', \'327104000802200900\', \'327104000802200950\', \'327104000802201040\', \'327104000802201050\', \'327104000802201170\', \'327104000802201270\', \'327104000802201340\', \'327104000802201370\', \'327104000802201420\', \'327104000802201460\', \'327104000802201520\', \'327104000802201910\', \'327104000802400070\', \'327104000802400160\', \'327104000802400170\', \'327104000802400250\', \'327104000802400260\', \'327104000802400350\', \'327104000802400460\', \'327104000802400580\', \'327104000802400590\', \'327104000802400620\', \'327104000802400630\', \'327104000802400960\', \'327104000802401120\', \'327104000802401150\', \'327104000802401160\', \'327104000802401270\', \'327104000802401310\', \'327104000802401390\', \'327104000802401400\', \'327104000802401510\', \'327104000802401590\', \'327104000802401610\', \'327104000802401620\']':
+                    return {
+                pane: 'pane_CILENDEKBARAT_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(222,34,141,1.0)',
+                interactive: true,
+            }
+                    break;
+                default:
+                    return {
+                pane: 'pane_CILENDEKBARAT_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(200,236,19,1.0)',
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_CILENDEKBARAT_1');
+        map.getPane('pane_CILENDEKBARAT_1').style.zIndex = 401;
+        map.getPane('pane_CILENDEKBARAT_1').style['mix-blend-mode'] = 'normal';
+        var layer_CILENDEKBARAT_1 = new L.geoJson(json_CILENDEKBARAT_1, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_CILENDEKBARAT_1',
+            layerName: 'layer_CILENDEKBARAT_1',
+            pane: 'pane_CILENDEKBARAT_1',
+            onEachFeature: pop_CILENDEKBARAT_1,
+            style: style_CILENDEKBARAT_1_0,
+        });
+        bounds_group.addLayer(layer_CILENDEKBARAT_1);
+        map.addLayer(layer_CILENDEKBARAT_1);
+        function pop_CILENDEKBARAT_2(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['TIPEHAK'] !== null ? autolinker.link(feature.properties['TIPEHAK'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['NIB'] !== null ? autolinker.link(feature.properties['NIB'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['LUASTERTUL'] !== null ? autolinker.link(feature.properties['LUASTERTUL'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['LUASPETA'] !== null ? autolinker.link(feature.properties['LUASPETA'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Nik'] !== null ? autolinker.link(feature.properties['Nik'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Ns'] !== null ? autolinker.link(feature.properties['Ns'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Nop'] !== null ? autolinker.link(feature.properties['Nop'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Nwp'] !== null ? autolinker.link(feature.properties['Nwp'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Predicted'] !== null ? autolinker.link(feature.properties['Predicted'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_CILENDEKBARAT_2_0(feature) {
+            if (feature.properties['Predicted'] >= 0.000000 && feature.properties['Predicted'] <= 0.000000 ) {
+                return {
+                pane: 'pane_CILENDEKBARAT_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,255,255,1.0)',
+                interactive: true,
+            }
+            }
+            if (feature.properties['Predicted'] >= 0.000000 && feature.properties['Predicted'] <= 2260561.227518 ) {
+                return {
+                pane: 'pane_CILENDEKBARAT_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,219,219,1.0)',
+                interactive: true,
+            }
+            }
+            if (feature.properties['Predicted'] >= 2260561.227518 && feature.properties['Predicted'] <= 2608539.772717 ) {
+                return {
+                pane: 'pane_CILENDEKBARAT_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,182,182,1.0)',
+                interactive: true,
+            }
+            }
+            if (feature.properties['Predicted'] >= 2608539.772717 && feature.properties['Predicted'] <= 2803683.744185 ) {
+                return {
+                pane: 'pane_CILENDEKBARAT_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,146,146,1.0)',
+                interactive: true,
+            }
+            }
+            if (feature.properties['Predicted'] >= 2803683.744185 && feature.properties['Predicted'] <= 3109232.384575 ) {
+                return {
+                pane: 'pane_CILENDEKBARAT_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,109,109,1.0)',
+                interactive: true,
+            }
+            }
+            if (feature.properties['Predicted'] >= 3109232.384575 && feature.properties['Predicted'] <= 3663441.605840 ) {
+                return {
+                pane: 'pane_CILENDEKBARAT_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,73,73,1.0)',
+                interactive: true,
+            }
+            }
+            if (feature.properties['Predicted'] >= 3663441.605840 && feature.properties['Predicted'] <= 4105480.302938 ) {
+                return {
+                pane: 'pane_CILENDEKBARAT_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,36,36,1.0)',
+                interactive: true,
+            }
+            }
+            if (feature.properties['Predicted'] >= 4105480.302938 && feature.properties['Predicted'] <= 9872625.925140 ) {
+                return {
+                pane: 'pane_CILENDEKBARAT_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,0,0,1.0)',
+                interactive: true,
+            }
+            }
+        }
+        map.createPane('pane_CILENDEKBARAT_2');
+        map.getPane('pane_CILENDEKBARAT_2').style.zIndex = 402;
+        map.getPane('pane_CILENDEKBARAT_2').style['mix-blend-mode'] = 'normal';
+        var layer_CILENDEKBARAT_2 = new L.geoJson(json_CILENDEKBARAT_2, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_CILENDEKBARAT_2',
+            layerName: 'layer_CILENDEKBARAT_2',
+            pane: 'pane_CILENDEKBARAT_2',
+            onEachFeature: pop_CILENDEKBARAT_2,
+            style: style_CILENDEKBARAT_2_0,
+        });
+        bounds_group.addLayer(layer_CILENDEKBARAT_2);
+        map.addLayer(layer_CILENDEKBARAT_2);
+        setBounds();
+        </script>
+    </body>
+</html>
